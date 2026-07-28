@@ -3472,19 +3472,19 @@ struct AnalysisAsymmetricPairing {
     int sign1 = 0;
     int sign2 = 0;
 
-    //Reserve capacity for the output tables
+    // Reserve capacity for the output tables
     int64_t reserveSize = 0;
     for (auto const& event : events) {
       if (!event.isEventSelected_bit(0)) {
         continue;
       }
       if (fConfigRemoveCollSplittingCandidates.value && event.isEventSelected_bit(2)) {
-        continue; 
+        continue;
       }
       auto groupedLegAAssocs = legACandidateAssocs.sliceBy(preslice, event.globalIndex());
       auto groupedLegBAssocs = legBCandidateAssocs.sliceBy(preslice, event.globalIndex());
       reserveSize += static_cast<int64_t>(groupedLegAAssocs.size()) *
-                    static_cast<int64_t>(groupedLegBAssocs.size());
+                     static_cast<int64_t>(groupedLegBAssocs.size());
     }
     ditrackList.reserve(reserveSize);
     ditrackExtraList.reserve(reserveSize);
