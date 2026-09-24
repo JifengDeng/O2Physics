@@ -3176,6 +3176,8 @@ struct AnalysisAsymmetricPairing {
   o2::framework::Configurable<bool> fConfigRemoveCollSplittingCandidates{"cfgRemoveCollSplittingCandidates", false, "If true, remove collision splitting candidates as determined by the event selection task upstream"};
   o2::framework::Configurable<bool> fConfigSkipAmbiguousIdCombinations{"cfgSkipAmbiguousIdCombinations", true, "Choose whether to skip pairs/triples which pass a stricter combination of cuts, e.g. KKPi triplets for D+ -> KPiPi"};
 
+  o2::framework::Configurable<bool> fConfigOnePairPerEvent{"cfgOnePairPerEvent", false, "If true, keep only the first valid pair per event in asymmetric pairing (histograms and ditrackList)"};
+
   o2::framework::Configurable<std::string> fConfigHistogramSubgroups{"cfgAsymmetricPairingHistogramsSubgroups", "barrel,vertexing", "Comma separated list of asymmetric-pairing histogram subgroups"};
   o2::framework::Configurable<bool> fConfigSameSignHistograms{"cfgSameSignHistograms", false, "Include same sign pair histograms for 2-prong decays"};
   o2::framework::Configurable<bool> fConfigAmbiguousHistograms{"cfgAmbiguousHistograms", false, "Include separate histograms for pairs/triplets with ambiguous tracks"};
@@ -3193,6 +3195,8 @@ struct AnalysisAsymmetricPairing {
   o2::framework::Configurable<std::string> fConfigLutPath{"lutPath", "GLO/Param/MatLUT", "Path of the Lut parametrization"};
   o2::framework::Configurable<bool> fConfigFetchInteractionRate{"cfgFetchInteractionRate", false, "Fetch event-wise interaction rate from the CCDB"};
   o2::framework::Configurable<std::string> fConfigIRSource{"cfgIRSource", "ZNC hadronic", "Estimator of the interaction rate (Recommended: pp --> T0VTX, Pb-Pb --> ZNC hadronic)"};
+  o2::framework::Configurable<std::string> fConfigCollisionSystem{"syst", "pp", "Collision system, pp or PbPb"};
+  o2::framework::Configurable<float> fConfigCenterMassEnergy{"energy", 13600.f, "Center of mass energy in GeV"};
 
   o2::framework::Service<o2::ccdb::BasicCCDBManager> fCCDB{};
   o2::ctpRateFetcher rateFetcher;
@@ -3238,6 +3242,8 @@ struct AnalysisAsymmetricPairing {
     if (context.mOptions.get<bool>("processDummy")) {
       return;
     }
+
+    VarManager::SetCollisionSystem((TString)fConfigCollisionSystem.value, fConfigCenterMassEnergy.value);
 
     VarManager::SetDefaultVarNames();
     fHistMan = new HistogramManager("analysisHistos", "aa", VarManager::kNVars);
@@ -3707,6 +3713,10 @@ struct AnalysisAsymmetricPairing {
         if constexpr (trackHasCov && TTwoProngFitter) {
           ditrackExtraList(t1.globalIndex(), t2.globalIndex(), VarManager::fgValues[VarManager::kVertexingTauzProjected], VarManager::fgValues[VarManager::kVertexingLzProjected], VarManager::fgValues[VarManager::kVertexingLxyProjected]);
         }
+
+        if (fConfigOnePairPerEvent.value) {
+          break;
+        }
       } // end inner assoc loop (leg A)
     } // end event loop
   }
@@ -3878,6 +3888,13 @@ struct AnalysisAsymmetricPairing {
     runAsymmetricPairing<true, VarManager::kDecayToKPi, gkEventFillMapWithCovZdcFitMultExtra, gkTrackFillMapWithCov>(events, trackAssocsPerCollision, barrelAssocs, barrelTracks);
   }
 
+  void processProtonPairSkimmed(MyEventsVtxCovZdcFitSelected const& events,
+                                o2::soa::Join<o2::aod::ReducedTracksAssoc, o2::aod::BarrelTrackCuts> const& barrelAssocs,
+                                MyBarrelTracksWithCovWithAmbiguities const& barrelTracks)
+  {
+    runAsymmetricPairing<false, VarManager::kDecayToPrPr, gkEventFillMapWithCovZdcFit, gkTrackFillMapWithCov>(events, trackAssocsPerCollision, barrelAssocs, barrelTracks);
+  }
+
   void processKaonPionPionSkimmed(MyEventsVtxCovZdcFitSelected const& events,
                                   o2::soa::Join<o2::aod::ReducedTracksAssoc, o2::aod::BarrelTrackCuts> const& barrelAssocs,
                                   MyBarrelTracksWithCovWithAmbiguities const& barrelTracks)
@@ -3905,6 +3922,7 @@ struct AnalysisAsymmetricPairing {
   }
 
   PROCESS_SWITCH(AnalysisAsymmetricPairing, processKaonPionSkimmed, "Run kaon pion pairing, with skimmed tracks", false);
+  PROCESS_SWITCH(AnalysisAsymmetricPairing, processProtonPairSkimmed, "Run proton anti-proton pairing, with skimmed tracks", false);
   PROCESS_SWITCH(AnalysisAsymmetricPairing, processKaonPionPionSkimmed, "Run kaon pion pion triplets, with skimmed tracks", false);
   PROCESS_SWITCH(AnalysisAsymmetricPairing, processKaonPionSkimmedMultExtra, "Run kaon pion pairing, with skimmed tracks", false);
   PROCESS_SWITCH(AnalysisAsymmetricPairing, processKaonPionPionSkimmedMultExtra, "Run kaon pion pion triplets, with skimmed tracks", false);

@@ -1628,6 +1628,19 @@ void o2::aod::dqhistograms::DefineHistograms(HistogramManager* hm, const char* h
         hm->AddHistogram(histClass, "Mass_cos2DeltaPhi", "cos 2(#varphi-#Psi_{2}^{A}) vs m", true, 125, 0.0, 5.0, VarManager::kMass, 100, -1.0, 1.0, VarManager::kCos2DeltaPhi);
         hm->AddHistogram(histClass, "Mass_cos3DeltaPhi", "cos 3(#varphi-#Psi_{3}^{A}) vs m", true, 125, 0.0, 5.0, VarManager::kMass, 100, -1.0, 1.0, VarManager::kCos3DeltaPhi);
       }
+
+      if (subGroupStr.Contains("prpairpid")) {
+        hm->AddHistogram(histClass, "nSigmaPr1_nSigmaPr2", "", false, 100, -8.0, 8.0, VarManager::kTPCorTOFnSigmaPr1, 100, -8.0, 8.0, VarManager::kTPCorTOFnSigmaPr2);
+        hm->AddHistogram(histClass, "t1Pt", "", false, 2000, 0.0, 20.0, VarManager::kPt1);
+        hm->AddHistogram(histClass, "t2Pt", "", false, 2000, 0.0, 20.0, VarManager::kPt2);
+      }
+
+      if (subGroupStr.Contains("prpairpolarization")) {
+        hm->AddHistogram(histClass, "Mass_Pt_CosThetaHE", "", false, 100, 1.0, 5.0, VarManager::kMass, 2000, 0.0, 20.0, VarManager::kPt, 20, -1., 1., VarManager::kCosThetaHE);
+        hm->AddHistogram(histClass, "Mass_Pt_PhiHE", "", false, 100, 1.0, 5.0, VarManager::kMass, 2000, 0.0, 20.0, VarManager::kPt, 20, 0., 2 * o2::constants::math::PI, VarManager::kPhiHE);
+        hm->AddHistogram(histClass, "Mass_Pt_PhiTildeHE", "", false, 100, 1.0, 5.0, VarManager::kMass, 2000, 0.0, 20.0, VarManager::kPt, 20, 0., 2 * o2::constants::math::PI, VarManager::kPhiTildeHE);
+      }
+      
     } else if (subGroupStr.Contains("dimuon")) {
       hm->AddHistogram(histClass, "Mass_Pt", "", false, 750, 0.0, 15.0, VarManager::kMass, 120, 0.0, 30.0, VarManager::kPt);
       hm->AddHistogram(histClass, "Mass_Rapidity", "", false, 750, 0.0, 15.0, VarManager::kMass, 150, 2.5, 4.0, VarManager::kRap);

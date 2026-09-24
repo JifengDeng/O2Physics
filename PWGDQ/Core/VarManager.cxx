@@ -1734,6 +1734,12 @@ void VarManager::SetDefaultVarNames()
   fgVariableUnits[kMCCosThetaStar] = "";
   fgVariableNames[kPairWeight] = "weight";
   fgVariableUnits[kPairWeight] = "";
+  fgVariableNames[kTPCorTOFnSigmaPr1] = "n #sigma_{p}^{TPC/TOF} (leg1)";
+  fgVariableUnits[kTPCorTOFnSigmaPr1] = "";
+  fgVariableNames[kTPCorTOFnSigmaPr2] = "n #sigma_{p}^{TPC/TOF} (leg2)";
+  fgVariableUnits[kTPCorTOFnSigmaPr2] = "";
+  fgVariableNames[kIsPrPair] = "is proton pair";
+  fgVariableUnits[kIsPrPair] = "";
   fgVariableNames[kCosPhiVP] = "cos#it{#varphi}_{VP}";
   fgVariableUnits[kCosPhiVP] = "";
   fgVariableNames[kPhiVP] = "#varphi_{VP} - #Psi_{2}";
@@ -2608,6 +2614,9 @@ void VarManager::SetDefaultVarNames()
   fgVarNamesMap["kCos2ThetaStarRandom"] = kCos2ThetaStarRandom;
   fgVarNamesMap["kMCCosThetaStar"] = kMCCosThetaStar;
   fgVarNamesMap["kPairWeight"] = kPairWeight;
+  fgVarNamesMap["kTPCorTOFnSigmaPr1"] = kTPCorTOFnSigmaPr1;
+  fgVarNamesMap["kTPCorTOFnSigmaPr2"] = kTPCorTOFnSigmaPr2;
+  fgVarNamesMap["kIsPrPair"] = kIsPrPair;
   fgVarNamesMap["kCosPhiVP"] = kCosPhiVP;
   fgVarNamesMap["kPhiVP"] = kPhiVP;
   fgVarNamesMap["kDeltaPhiPair2"] = kDeltaPhiPair2;

@@ -158,6 +158,7 @@ class VarManager : public TObject
     kDecayToEE = 0, // e.g. J/psi        -> e+ e-
     kDecayToMuMu,   // e.g. J/psi        -> mu+ mu-
     kDecayToPiPi,
+    kDecayToPrPr,               // e.g. p pbar pairing
     kElectronMuon,              // e.g. Electron - muon correlations
     kBcToThreeMuons,            // e.g. Bc           -> mu+ mu- mu+
     kBtoJpsiEEK,                // e.g. B+           -> e+ e- K+
@@ -1007,6 +1008,9 @@ class VarManager : public TObject
     kPairEfficiency,
     kPairWeight,
     kNPairVariables,
+    kTPCorTOFnSigmaPr1,
+    kTPCorTOFnSigmaPr2,
+    kIsPrPair,
 
     // Candidate-track correlation variables
     kPairMass,
@@ -3795,6 +3799,11 @@ void VarManager::FillPair(T1 const& t1, T2 const& t2, float* values)
     values[kTPCnSigmaKa_leg1] = t1.tpcNSigmaKa();
   }
 
+  if constexpr (pairType == kDecayToPrPr) {
+    m1 = o2::constants::physics::MassProton;
+    m2 = o2::constants::physics::MassProtonBar;
+  }
+
   if constexpr (pairType == kElectronMuon) {
     m2 = o2::constants::physics::MassMuon;
   }
@@ -3850,6 +3859,35 @@ void VarManager::FillPair(T1 const& t1, T2 const& t2, float* values)
         arg = -1;
       }
       values[kOpeningAngle] = TMath::ACos(arg);
+    }
+  }
+
+  if constexpr (pairType == kDecayToPrPr && (fillMap & ReducedTrackBarrelPID) > 0 && (fillMap & ReducedTrackBarrel) > 0) {
+    if (t1.hasTOF()) {
+      values[kTPCorTOFnSigmaPr1] = t1.tofNSigmaPr();
+    } else if (t1.hasTPC()) {
+      values[kTPCorTOFnSigmaPr1] = t1.tpcNSigmaPr();
+    } else {
+      values[kTPCorTOFnSigmaPr1] = -999.f;
+    }
+
+    if (t2.hasTOF()) {
+      values[kTPCorTOFnSigmaPr2] = t2.tofNSigmaPr();
+    } else if (t2.hasTPC()) {
+      values[kTPCorTOFnSigmaPr2] = t2.tpcNSigmaPr();
+    } else {
+      values[kTPCorTOFnSigmaPr2] = -999.f;
+    }
+
+    bool tof1 = t1.hasTOF(), tpc1 = t1.hasTPC();
+    bool tof2 = t2.hasTOF(), tpc2 = t2.hasTPC();
+    bool hasTOForgood = (tof1 && tpc2) || (tpc1 && tof2) || (tof1 && tof2);
+    if (hasTOForgood) {
+      float nsigma1 = values[kTPCorTOFnSigmaPr1];
+      float nsigma2 = values[kTPCorTOFnSigmaPr2];
+      values[kIsPrPair] = (std::abs(nsigma1) < 4.f && std::abs(nsigma2) < 4.f && std::pow(nsigma1, 2.0) + std::pow(nsigma2, 2.0) < 16.f) ? 1 : 0;
+    } else {
+      values[kIsPrPair] = 0;
     }
   }
 
@@ -4639,6 +4677,11 @@ void VarManager::FillPairMC(T1 const& t1, T2 const& t2, float* values)
   if (pairType == kDecayToKPi) {
     m1 = o2::constants::physics::MassKaonCharged;
     m2 = o2::constants::physics::MassPionCharged;
+  }
+
+  if (pairType == kDecayToPrPr) {
+    m1 = o2::constants::physics::MassProton;
+    m2 = o2::constants::physics::MassProtonBar;
   }
 
   if (pairType == kElectronMuon) {

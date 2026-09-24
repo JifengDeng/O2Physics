@@ -807,6 +807,13 @@ AnalysisCompositeCut* o2::aod::dqcuts::GetCompositeCut(const char* cutName)
     return cut;
   }
 
+  if (nameStr == "UPCexclJpsi_medium") {
+    cut->AddCut(GetAnalysisCut("primaryVertexContributor"));
+    cut->AddCut(GetAnalysisCut("jpsiKineSkimmed3"));
+    cut->AddCut(GetAnalysisCut("jpsi_trackCut_debug7"));
+    return cut;
+  }
+
   if (nameStr == "PIDCalib") {
     cut->AddCut(GetAnalysisCut("PIDStandardKine")); // standard kine cuts usually are applied via Filter in the task
     cut->AddCut(GetAnalysisCut("electronStandardQuality"));
@@ -3740,6 +3747,11 @@ AnalysisCompositeCut* o2::aod::dqcuts::GetCompositeCut(const char* cutName)
     return cut;
   }
 
+  if (nameStr == "pairIsPr") {
+    cut->AddCut(GetAnalysisCut("pairIsPr"));
+    return cut;
+  }
+
   if (nameStr == "pairTauxyzProjectedCosPointing1") {
     cut->AddCut(GetAnalysisCut("pairCosPointingNeg"));
     cut->AddCut(GetAnalysisCut("pairTauxyzProjected1"));
@@ -4695,6 +4707,11 @@ AnalysisCut* o2::aod::dqcuts::GetAnalysisCut(const char* cutName)
     return cut;
   }
 
+  if (nameStr == "jpsiKineSkimmed3") {
+    cut->AddCut(VarManager::kEta, -0.9, 0.9);
+    return cut;
+  }
+
   if (nameStr == "lmeePrefilterKine") {
     cut->AddCut(VarManager::kPt, 0., 20.0);
     cut->AddCut(VarManager::kEta, -1.2, 1.2);
@@ -4924,6 +4941,18 @@ AnalysisCut* o2::aod::dqcuts::GetAnalysisCut(const char* cutName)
     cut->AddCut(VarManager::kTPCnclsCR, 140., 159);
     cut->AddCut(VarManager::kIsITSibAny, 0.5, 1.5);
     cut->AddCut(VarManager::kIsSPDfirst, 0.5, 1.5);
+    return cut;
+  }
+
+  if (nameStr == "jpsi_trackCut_debug7") {
+    cut->AddCut(VarManager::kTrackDCAz, -2.0, 2.0);
+    cut->AddCut(VarManager::kITSncls, 7.0, 10.0);
+    cut->AddCut(VarManager::kTPCncls, 70.0, 170.);
+    std::shared_ptr<TF1> DCAxyHigh = std::make_shared<TF1>("DCAxyHigh", "[0]+[1]/pow(x,[2])", 0., 1000.);
+    DCAxyHigh->SetParameters(0.0105, 0.035, 1.1);
+    std::shared_ptr<TF1> DCAxyLow = std::make_shared<TF1>("DCAxyLow", "-1.0*([0]+[1]/pow(x,[2]))", 0., 1000.);
+    DCAxyLow->SetParameters(0.0105, 0.035, 1.1);
+    cut->AddCut(VarManager::kTrackDCAxy, DCAxyLow, DCAxyHigh, false, VarManager::kPt, 0.0, 1000.0, false);
     return cut;
   }
 
@@ -7213,6 +7242,11 @@ AnalysisCut* o2::aod::dqcuts::GetAnalysisCut(const char* cutName)
 
   if (nameStr == "pairCosPointingNeg85") {
     cut->AddCut(VarManager::kCosPointingAngle, -1000., -0.85);
+    return cut;
+  }
+
+  if (nameStr == "pairIsPr") {
+    cut->AddCut(VarManager::kIsPrPair, 0.5, 1.5);
     return cut;
   }
 

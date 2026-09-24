@@ -3363,6 +3363,8 @@ struct AnalysisAsymmetricPairing {
   Configurable<std::string> fConfigPairCutsJSON{"cfgPairCutsJSON", "", "Additional list of pair cuts in JSON format"};
   Configurable<bool> fConfigSkipAmbiguousIdCombinations{"cfgSkipAmbiguousIdCombinations", true, "Choose whether to skip pairs/triples which pass a stricter combination of cuts, e.g. KKPi triplets for D+ -> KPiPi"};
 
+  Configurable<bool> fConfigOnePairPerEvent{"cfgOnePairPerEvent", false, "If true, keep only the first valid pair per event in asymmetric pairing (histograms and ditrackList)"};
+
   Configurable<std::string> fConfigHistogramSubgroups{"cfgAsymmetricPairingHistogramsSubgroups", "barrel,vertexing", "Comma separated list of asymmetric-pairing histogram subgroups"};
   Configurable<bool> fConfigSameSignHistograms{"cfgSameSignHistograms", false, "Include same sign pair histograms for 2-prong decays"};
   // Configurable<bool> fConfigAmbiguousHistograms{"cfgAmbiguousHistograms", false, "Include separate histograms for pairs/triplets with ambiguous tracks"};
@@ -3379,6 +3381,8 @@ struct AnalysisAsymmetricPairing {
   Configurable<bool> fConfigUseAbsDCA{"cfgUseAbsDCA", false, "Use absolute DCA minimization instead of chi^2 minimization in secondary vertexing"};
   Configurable<bool> fConfigPropToPCA{"cfgPropToPCA", false, "Propagate tracks to secondary vertex"};
   Configurable<std::string> fConfigLutPath{"lutPath", "GLO/Param/MatLUT", "Path of the Lut parametrization"};
+  Configurable<std::string> fConfigCollisionSystem{"syst", "pp", "Collision system, pp or PbPb"};
+  Configurable<float> fConfigCenterMassEnergy{"energy", 13600.f, "Center of mass energy in GeV"};
 
   Configurable<std::string> fConfigMCGenSignals{"cfgBarrelMCGenSignals", "", "Comma separated list of MC signals (generated)"};
   Configurable<std::string> fConfigMCRecSignals{"cfgBarrelMCRecSignals", "", "Comma separated list of MC signals (reconstructed)"};
@@ -3435,6 +3439,8 @@ struct AnalysisAsymmetricPairing {
     if (context.mOptions.get<bool>("processDummy")) {
       return;
     }
+
+    VarManager::SetCollisionSystem((TString)fConfigCollisionSystem.value, fConfigCenterMassEnergy.value);
 
     VarManager::SetDefaultVarNames();
     fHistMan = new HistogramManager("analysisHistos", "aa", VarManager::kNVars);
@@ -4074,6 +4080,10 @@ struct AnalysisAsymmetricPairing {
         if constexpr (trackHasCov && TTwoProngFitter) {
           ditrackExtraList(t1.globalIndex(), t2.globalIndex(), VarManager::fgValues[VarManager::kVertexingTauzProjected], VarManager::fgValues[VarManager::kVertexingLzProjected], VarManager::fgValues[VarManager::kVertexingLxyProjected]);
         }
+
+        if (fConfigOnePairPerEvent.value) {
+          break;
+        }
       } // end inner assoc loop (leg A)
     } // end event loop
   }
@@ -4279,6 +4289,14 @@ struct AnalysisAsymmetricPairing {
     runAsymmetricPairing<true, VarManager::kDecayToKPi, gkEventFillMapWithCovMultExtra, gkTrackFillMapWithCov>(events, trackAssocsPerCollision, barrelAssocs, barrelTracks, mcEvents, mcTracks);
   }
 
+  void processProtonPairSkimmed(MyEventsVtxCovSelected const& events,
+                                soa::Join<aod::ReducedTracksAssoc, aod::BarrelTrackCuts> const& barrelAssocs,
+                                MyBarrelTracksWithCovWithAmbiguities const& barrelTracks,
+                                ReducedMCEvents const& mcEvents, ReducedMCTracks const& mcTracks)
+  {
+    runAsymmetricPairing<false, VarManager::kDecayToPrPr, gkEventFillMapWithCov, gkTrackFillMapWithCov>(events, trackAssocsPerCollision, barrelAssocs, barrelTracks, mcEvents, mcTracks);
+  }
+
   void processKaonPionPionSkimmed(MyEventsVtxCovSelected const& events,
                                   soa::Join<aod::ReducedTracksAssoc, aod::BarrelTrackCuts> const& barrelAssocs,
                                   MyBarrelTracksWithCovWithAmbiguities const& barrelTracks,
@@ -4342,6 +4360,7 @@ struct AnalysisAsymmetricPairing {
 
   PROCESS_SWITCH(AnalysisAsymmetricPairing, processKaonPionSkimmed, "Run kaon pion pairing, with skimmed tracks", false);
   PROCESS_SWITCH(AnalysisAsymmetricPairing, processKaonPionSkimmedMultExtra, "Run kaon pion pairing, with skimmed tracks", false);
+  PROCESS_SWITCH(AnalysisAsymmetricPairing, processProtonPairSkimmed, "Run proton anti-proton pairing, with skimmed tracks", false);
   PROCESS_SWITCH(AnalysisAsymmetricPairing, processKaonPionPionSkimmed, "Run kaon pion pion triplets, with skimmed tracks", false);
   PROCESS_SWITCH(AnalysisAsymmetricPairing, processMCGen, "Loop over MC particle stack and fill generator level histograms", false);
   PROCESS_SWITCH(AnalysisAsymmetricPairing, processMCGenWithEventSelection, "Loop over MC particle stack and fill generator level histograms", false);
